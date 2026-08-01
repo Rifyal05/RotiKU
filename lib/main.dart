@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
+import 'core/services/secure_local_storage.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/user/auth_provider.dart';
 import 'providers/catalog/catalog_provider.dart';
@@ -19,6 +20,9 @@ void main() async {
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
     publishableKey: AppConstants.supabasePublishableKey,
+    authOptions: const FlutterAuthClientOptions(
+      localStorage: SecureLocalStorage(),
+    ),
   );
 
   runApp(

@@ -57,7 +57,7 @@ class CartScreen extends StatelessWidget {
                 Container(
                   width: 80,
                   height: 80,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: AppColors.oatCream,
                     shape: BoxShape.circle,
                   ),
@@ -164,7 +164,7 @@ class CartScreen extends StatelessWidget {
                                   ),
                                   GestureDetector(
                                     onTap: () {
-                                      cartProvider.removeItem(item.id);
+                                      cartProvider.removeItem(item.productId);
                                     },
                                     child: const Icon(
                                       Icons.delete_outline_rounded,
@@ -203,7 +203,7 @@ class CartScreen extends StatelessWidget {
                                       children: [
                                         GestureDetector(
                                           onTap: () {
-                                            cartProvider.decrementQuantity(item.id);
+                                            cartProvider.decrementQuantity(item.productId);
                                           },
                                           child: const Icon(Icons.remove, size: 18, color: AppColors.textPrimary),
                                         ),
@@ -217,7 +217,7 @@ class CartScreen extends StatelessWidget {
                                         ),
                                         GestureDetector(
                                           onTap: () {
-                                            cartProvider.incrementQuantity(item.id);
+                                            cartProvider.incrementQuantity(item.productId);
                                           },
                                           child: const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
                                         ),
@@ -320,7 +320,9 @@ class CartScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () {
+                onPressed: cartProvider.items.isEmpty
+                    ? null
+                    : () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const CheckoutScreen()),
                   );
