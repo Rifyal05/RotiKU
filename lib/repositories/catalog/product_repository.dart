@@ -1,4 +1,5 @@
 import '../../core/services/supabase_service.dart';
+import '../../models/catalog/product_model.dart';
 
 class ProductRepository {
   final SupabaseService _supabaseService;
@@ -6,7 +7,8 @@ class ProductRepository {
   ProductRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  Future<List<Map<String, dynamic>>> getActiveProducts() async {
-    return await _supabaseService.fetchActiveProducts();
+  Future<List<ProductModel>> getActiveProducts() async {
+    final rawList = await _supabaseService.fetchActiveProducts();
+    return rawList.map((json) => ProductModel.fromJson(json)).toList();
   }
 }

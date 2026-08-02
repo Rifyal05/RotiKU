@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../models/catalog/product_model.dart';
 import '../../../providers/catalog/cart_provider.dart';
 import '../../../providers/catalog/catalog_provider.dart';
 import 'product_detail_screen.dart';
@@ -49,34 +50,25 @@ class _SearchScreenState extends State<SearchScreen> {
     final String query = _searchController.text.trim().toLowerCase();
     final allProducts = catalogProvider.allProducts;
 
-    List<Map<String, dynamic>> searchResults = query.isEmpty
-        ? List<Map<String, dynamic>>.from(allProducts)
+    List<ProductModel> searchResults = query.isEmpty
+        ? List<ProductModel>.from(allProducts)
         : allProducts
-              .where(
-                (p) =>
-                    (p['name'] ?? '').toString().toLowerCase().contains(query),
-              )
+              .where((p) => p.name.toLowerCase().contains(query))
               .toList();
 
     if (_selectedFilterIndex == 0) {
-      searchResults.sort(
-        (a, b) => (a['price'] as num? ?? 0).compareTo(b['price'] as num? ?? 0),
-      );
+      searchResults.sort((a, b) => a.price.compareTo(b.price));
     } else if (_selectedFilterIndex == 1) {
-      searchResults.sort(
-        (a, b) => (b['price'] as num? ?? 0).compareTo(a['price'] as num? ?? 0),
-      );
+      searchResults.sort((a, b) => b.price.compareTo(a.price));
     } else if (_selectedFilterIndex == 2) {
-      searchResults = searchResults
-          .where((p) => (p['stock'] as num? ?? 0) > 0)
-          .toList();
+      searchResults = searchResults.where((p) => p.stock > 0).toList();
     } else if (_selectedFilterIndex == 3) {
       searchResults = searchResults
-          .where((p) => p['category'] == 'Roti Manis')
+          .where((p) => p.category == 'Roti Manis')
           .toList();
     } else if (_selectedFilterIndex == 4) {
       searchResults = searchResults
-          .where((p) => p['category'] == 'Pastry')
+          .where((p) => p.category == 'Pastry')
           .toList();
     }
 
@@ -266,15 +258,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                 itemCount: searchResults.length,
                                 itemBuilder: (context, index) {
                                   final product = searchResults[index];
-                                  final String productId =
-                                      product['id']?.toString() ?? '$index';
-                                  final String name = product['name'] ?? 'Roti';
-                                  final int price =
-                                      (product['price'] as num?)?.toInt() ?? 0;
-                                  final int stock =
-                                      (product['stock'] as num?)?.toInt() ?? 0;
-                                  final String imageUrl =
-                                      product['image_url'] ?? '';
+                                  final String productId = product.id;
+                                  final String name = product.name;
+                                  final int price = product.price;
+                                  final int stock = product.stock;
+                                  final String imageUrl = product.imageUrl;
 
                                   final isInCart = cartProvider.items.any(
                                     (item) => item.productId == productId,
@@ -286,7 +274,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (_) => ProductDetailScreen(
-                                            product: product,
+                                            product: product.toJson(),
                                           ),
                                         ),
                                       );

@@ -35,8 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
       'image': 'https://lh3.googleusercontent.com/aida-public/AB6AXuCcsfwcES2Bur09isSYifHd9D_OqcJixOOCifatGluluWGuBtmI3_fG5yWMrwfrkg7vyN8gU_daqhdlHBKdn0WSaGVbNvegB8eW-i1_7zmswJlhQp7AXmPDznBW21GWjWxyfZNeEc1EMpmqz_lv6M3CGSGYwGl4izLj55zf1qAU5x7FQ4Y-PMBFFxQRDiLc_rfw5JPelh51dnh17UH1WwOXHWhRTx7EMo7mrC-bbdnwdSiPLsbpN22U',
     },
     {
-      'title': 'Roti Sourdough\nAdonan Alami',
-      'subtitle': 'Fermentasi lambat 24 jam dengan ragi liar alami, menghasilkan roti sehat yang ramah untuk pencernaan.',
+      'title': 'Gratis Ongkir\nKhusus Hari Ini',
+      'subtitle': 'Nikmati pengiriman cepat langsung ke pintu rumah kamu',
       'image': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDcl0SDriwR_Ivb74XZqe4sC0_z9yPEe6M-Z2kImiTnR4CCuPH-f6hWereHEWCL_RFe1J_BeVZXjEsZjABm0MKkl_iRXvJs9ug1t-eJmtghS0iN7Hc1BisHtNH9VWbJE6h-ZvmqMjpaHb1zAxiNpcNJVxRRSJITvPV-4jtJ78jEaDpD6hAnyObA8zvL-OAi7M3crkmaFGr2gfLV0l9p0-Cr0p5sFzYt6MVPBNjqjX0e6Hf2uoy4ICh',
     },
   ];
@@ -431,11 +431,11 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        final String productId = product['id']?.toString() ?? '$index';
-        final String name = product['name'] ?? 'Roti';
-        final int price = (product['price'] as num?)?.toInt() ?? 0;
-        final int stock = (product['stock'] as num?)?.toInt() ?? 0;
-        final String imageUrl = product['image_url'] ?? '';
+        final String productId = product.id;
+        final String name = product.name;
+        final int price = product.price;
+        final int stock = product.stock;
+        final String imageUrl = product.imageUrl;
 
         final isInCart = cartProvider.items.any((item) => item.productId == productId);
         final isOutOfStock = stock <= 0;
@@ -443,7 +443,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return GestureDetector(
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+              MaterialPageRoute(
+                builder: (_) => ProductDetailScreen(
+                  product: product.toJson(),
+                ),
+              ),
             );
           },
           child: Container(

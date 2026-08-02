@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_constants.dart';
+import '../../models/catalog/product_model.dart';
+import '../../repositories/catalog/product_repository.dart';
 
 class CatalogProvider extends ChangeNotifier {
+  final ProductRepository _productRepository = ProductRepository();
   final SupabaseClient _client = Supabase.instance.client;
 
   bool _isLoading = false;
@@ -10,7 +13,7 @@ class CatalogProvider extends ChangeNotifier {
   bool _hasMoreData = true;
   String? _errorMessage;
 
-  List<Map<String, dynamic>> _allProducts = [];
+  List<ProductModel> _allProducts = [];
   int _selectedCategoryIndex = 0;
   int _currentPage = 0;
   static const int _pageSize = 10;
@@ -29,15 +32,15 @@ class CatalogProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   int get selectedCategoryIndex => _selectedCategoryIndex;
 
-  List<Map<String, dynamic>> get allProducts => List.unmodifiable(_allProducts);
+  List<ProductModel> get allProducts => List.unmodifiable(_allProducts);
 
-  List<Map<String, dynamic>> get filteredProducts {
+  List<ProductModel> get filteredProducts {
     if (_selectedCategoryIndex == 0) {
       return _allProducts;
     }
     final selectedCat = categories[_selectedCategoryIndex];
     return _allProducts
-        .where((item) => item['category'] == selectedCat)
+        .where((item) => item.category == selectedCat)
         .toList();
   }
 
@@ -58,15 +61,8 @@ class CatalogProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      final response = await _client
-          .from(AppConstants.tableProducts)
-          .select()
-          .eq('is_active', true)
-          .order('created_at', ascending: false)
-          .range(0, _pageSize - 1);
+      _allProducts = await _productRepository.getActiveProducts();
 
-      _allProducts = List<Map<String, dynamic>>.from(response);
-      _hasMoreData = _allProducts.length >= _pageSize;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -94,7 +90,8 @@ class CatalogProvider extends ChangeNotifier {
           .order('created_at', ascending: false)
           .range(from, to);
 
-      final newProducts = List<Map<String, dynamic>>.from(response);
+      final newRawList = List<Map<String, dynamic>>.from(response);
+      final newProducts = newRawList.map((json) => ProductModel.fromJson(json)).toList();
 
       if (newProducts.length < _pageSize) {
         _hasMoreData = false;
@@ -127,7 +124,8 @@ class CatalogProvider extends ChangeNotifier {
           .ilike('name', '%${query.trim()}%')
           .order('created_at', ascending: false);
 
-      _allProducts = List<Map<String, dynamic>>.from(response);
+      final rawList = List<Map<String, dynamic>>.from(response);
+      _allProducts = rawList.map((json) => ProductModel.fromJson(json)).toList();
       _hasMoreData = false;
       _isLoading = false;
       notifyListeners();
