@@ -34,12 +34,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         widget.product?['description'] ??
         'Croissant klasik yang dipanggang dengan mentega pilihan dan taburan almond panggang premium.';
     final int unitPrice = (widget.product?['price'] as num?)?.toInt() ?? 24000;
-    final int stock = (widget.product?['stock'] as num?)?.toInt() ?? 15;
+    final int stock = (widget.product?['stock'] as num?)?.toInt() ?? 0;
     final String imageUrl =
         widget.product?['image_url'] ??
         'https://lh3.googleusercontent.com/aida/AP1WRLsp5bMzZmlhYMC-s7yLAsmFfLYwMXw8tAdrwgcFVuzOjPL4DCj0bS7OTL-Z3dGZv7Rdcl3mVTNMfRE-ekvJPspoDM7iDwcBLw_mspX7VijSaX0Hz0dd4oPdHvR0_TvwR9WxqhNI0hi63oOWTsQEtC74Au8XPbsYeC5gZh-H-_wleJoZSlgAiDpVYMi-UfPZeB4kwZhxMq_-BrXqfqpDgFux0mXeYOKxtRbEMmrNcm6nwdZo4Hl-iYP5YJ4';
 
-    final int totalPrice = _quantity * unitPrice;
+    final bool isOutOfStock = stock <= 0;
+    final int totalPrice = isOutOfStock ? 0 : _quantity * unitPrice;
     final cartProvider = context.read<CartProvider>();
 
     return Scaffold(
@@ -176,18 +177,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.oatCream,
+                            color: isOutOfStock
+                                ? AppColors.danger.withAlpha(30)
+                                : AppColors.oatCream,
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: AppColors.brandAmber.withAlpha(51),
+                              color: isOutOfStock
+                                  ? AppColors.danger
+                                  : AppColors.brandAmber.withAlpha(51),
                             ),
                           ),
                           child: Text(
-                            'Stok: $stock Pcs',
-                            style: const TextStyle(
+                            isOutOfStock ? 'HABIS' : 'Stok: $stock Pcs',
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.brandAmber,
+                              color: isOutOfStock
+                                  ? AppColors.danger
+                                  : AppColors.brandAmber,
                             ),
                           ),
                         ),
@@ -260,52 +267,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          if (_quantity > 1) {
-                            setState(() {
-                              _quantity--;
-                            });
-                          }
-                        },
+                        onTap: isOutOfStock
+                            ? null
+                            : () {
+                                if (_quantity > 1) {
+                                  setState(() {
+                                    _quantity--;
+                                  });
+                                }
+                              },
                         child: Container(
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.brandAmber),
+                            border: Border.all(
+                              color: isOutOfStock
+                                  ? AppColors.surfaceBorder
+                                  : AppColors.brandAmber,
+                            ),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.remove,
                             size: 18,
-                            color: AppColors.brandAmber,
+                            color: isOutOfStock
+                                ? AppColors.textSecondary
+                                : AppColors.brandAmber,
                           ),
                         ),
                       ),
                       SizedBox(
                         width: 36,
                         child: Text(
-                          '$_quantity',
+                          '${isOutOfStock ? 0 : _quantity}',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                color: isOutOfStock
+                                    ? AppColors.textSecondary
+                                    : AppColors.textPrimary,
+                              ),
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _quantity++;
-                          });
-                        },
+                        onTap: isOutOfStock
+                            ? null
+                            : () {
+                                if (_quantity < stock) {
+                                  setState(() {
+                                    _quantity++;
+                                  });
+                                }
+                              },
                         child: Container(
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: AppColors.brandAmber,
+                            color: isOutOfStock
+                                ? AppColors.surfaceBorder
+                                : AppColors.brandAmber,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.add,
                             size: 18,
-                            color: Colors.white,
+                            color: isOutOfStock
+                                ? AppColors.textSecondary
+                                : Colors.white,
                           ),
                         ),
                       ),
@@ -320,8 +348,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       children: [
                         TextSpan(
                           text: _formatRupiah(totalPrice),
-                          style: const TextStyle(
-                            color: AppColors.brandAmber,
+                          style: TextStyle(
+                            color: isOutOfStock
+                                ? AppColors.textSecondary
+                                : AppColors.brandAmber,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -332,29 +362,45 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
-                  cartProvider.addItem(
-                    id: productId,
-                    name: name,
-                    price: unitPrice,
-                    imageUrl: imageUrl,
-                    quantity: _quantity,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '$_quantity $name berhasil ditambahkan ke keranjang!',
-                      ),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                },
-                child: const Row(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isOutOfStock
+                      ? AppColors.disabledGrey
+                      : AppColors.brandAmber,
+                  foregroundColor: isOutOfStock
+                      ? AppColors.textSecondary
+                      : Colors.white,
+                  elevation: 0,
+                ),
+                onPressed: isOutOfStock
+                    ? null
+                    : () {
+                        cartProvider.addItem(
+                          id: productId,
+                          name: name,
+                          price: unitPrice,
+                          imageUrl: imageUrl,
+                          quantity: _quantity,
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '$_quantity $name berhasil ditambahkan ke keranjang!',
+                            ),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      },
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.shopping_basket_outlined, size: 20),
-                    SizedBox(width: 8),
-                    Text('Tambah ke Keranjang'),
+                    Icon(
+                      isOutOfStock
+                          ? Icons.cancel_outlined
+                          : Icons.shopping_basket_outlined,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(isOutOfStock ? 'Stok Habis' : 'Tambah ke Keranjang'),
                   ],
                 ),
               ),
